@@ -12,11 +12,17 @@ import { Task, TaskFormData } from '@/types/task';
 import { taskService } from '@/services/taskService';
 
 export default function Dashboard() {
-  const [user] = useAuthState(auth);
+  const [user, loading, error] = useAuthState(auth);
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tasksLoading, setTasksLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
 
   useEffect(() => {
     if (user) {
@@ -28,13 +34,13 @@ export default function Dashboard() {
     if (!user) return;
     
     try {
-      setLoading(true);
+      setTasksLoading(true);
       const userTasks = await taskService.getTasks(user.email!);
       setTasks(userTasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
     } finally {
-      setLoading(false);
+      setTasksLoading(false);
     }
   };
 
@@ -110,12 +116,20 @@ export default function Dashboard() {
     }
   };
 
+  if (loading || (!user && !error)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
   if (!user) {
     return null;
   }
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoute >
       <div className="min-h-screen bg-gray-50">
         <div className="bg-white shadow">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -145,7 +159,7 @@ export default function Dashboard() {
             onCancel={editingTask ? handleCancelEdit : undefined}
           />
 
-          {loading ? (
+          {tasksLoading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">Loading tasks...</p>
