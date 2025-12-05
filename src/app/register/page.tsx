@@ -89,7 +89,7 @@ export default function Register() {
             </div>
             <div>
               <label htmlFor="confirm-password" className="sr-only">
-                Confirm Password
+                Confirm Password 
               </label>
               <input
                 id="confirm-password"
